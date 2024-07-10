@@ -51,6 +51,7 @@ var (
 	}{
 		{"Eterm", eterm_keys},
 		{"screen", screen_keys},
+		{"screen-256color", screen_keys},
 		{"xterm", xterm_keys},
 		{"xterm-256color", xterm_keys},
 		{"tmux-256color", xterm_keys},
