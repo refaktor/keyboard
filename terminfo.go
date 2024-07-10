@@ -19,7 +19,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -125,14 +124,14 @@ func ti_try_path(path string) (data []byte, err error) {
 
 	// first try, the typical *nix path
 	terminfo := path + "/" + term[0:1] + "/" + term
-	data, err = ioutil.ReadFile(terminfo)
+	data, err = os.ReadFile(terminfo)
 	if err == nil {
 		return
 	}
 
 	// fallback to darwin specific dirs structure
 	terminfo = path + "/" + hex.EncodeToString([]byte(term[:1])) + "/" + term
-	data, err = ioutil.ReadFile(terminfo)
+	data, err = os.ReadFile(terminfo)
 	return
 }
 
