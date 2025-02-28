@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"unicode/utf8"
-	"fmt"
+	// "fmt"
 	"golang.org/x/sys/unix"
 )
 
@@ -63,7 +63,7 @@ func extract_event(inbuf []byte) (int, KeyEvent) {
 	if len(inbuf) == 0 {
 		return 0, KeyEvent{}
 	}
-	fmt.Printf("inbuf[0]: %q (0x%x)\n", inbuf[0], inbuf[0]) // Debug print
+	// fmt.Printf("inbuf[0]: %q (0x%x)\n", inbuf[0], inbuf[0]) // Debug print
 	if inbuf[0] == '\033' {
 		if len(inbuf) == 1 {
 			return 1, KeyEvent{Key: KeyEsc}
@@ -79,11 +79,6 @@ func extract_event(inbuf []byte) (int, KeyEvent) {
 			return i, KeyEvent{Key: KeyEsc, Err: errors.New("Unrecognized escape sequence")}
 		}
 	}
-
-	// Check for Ctrl+Backspace explicitly
-    	if inbuf[0] == '\x17' {
-        	return 1, KeyEvent{Key: KeyCtrlBackspace, Rune: '\x17'}
-    	}
 
 	// if we're here, this is not an escape sequence and not an alt sequence
 	// so, it's a FUNCTIONAL KEY or a UNICODE character

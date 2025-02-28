@@ -91,6 +91,7 @@ const (
 	KeyCtrl8          Key = 0x7F
 	// New constant for Ctrl+Backspace
 	KeyCtrlBackspace  Key = 0x17 // Matches Ctrl+W’s value, but we’ll distinguish it
+	KeyAltBackspace  Key = 0x1B // Matches Ctrl+W’s value, but we’ll distinguish it
 )
 
 var (
