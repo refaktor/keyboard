@@ -89,6 +89,8 @@ const (
 	KeySpace          Key = 0x20
 	KeyBackspace2     Key = 0x7F
 	KeyCtrl8          Key = 0x7F
+	// New constant for Ctrl+Backspace
+	KeyCtrlBackspace  Key = 0x17 // Matches Ctrl+W’s value, but we’ll distinguish it
 )
 
 var (
@@ -99,6 +101,10 @@ var (
 	busy          = make(chan bool)
 	waitingForKey = make(chan bool)
 )
+
+func newKeyEvent(r rune, k Key, err error) KeyEvent {
+    return KeyEvent{Key: k, Rune: r, Err: err}
+}
 
 func IsStarted(timeout time.Duration) bool {
 	select {
