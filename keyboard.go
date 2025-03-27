@@ -10,7 +10,8 @@ import (
 	"runtime"
 	"strings"
 	"unicode/utf8"
-	// "fmt"
+
+	//"fmt"
 	"golang.org/x/sys/unix"
 )
 
@@ -63,7 +64,9 @@ func extract_event(inbuf []byte) (int, KeyEvent) {
 	if len(inbuf) == 0 {
 		return 0, KeyEvent{}
 	}
-	// fmt.Printf("inbuf[0]: %q (0x%x)\n", inbuf[0], inbuf[0]) // Debug print
+	//var b1 byte
+	//if len(inbuf) > 1 { b1 = inbuf[1] }
+	//fmt.Printf("inbuf[0]: %q (0x%x) (0x%x)\n", inbuf[0], inbuf[0], b1) // Debug print
 	if inbuf[0] == '\033' {
 		if len(inbuf) == 1 {
 			return 1, KeyEvent{Key: KeyEsc}

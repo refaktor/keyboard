@@ -137,9 +137,9 @@ func getKeyEvent(r *k32_event) (KeyEvent, bool) {
 			e.Key = KeyArrowRight
 		case vk_backspace:
 			if ctrlPressed {
-				e.Key = KeyBackspace2
-			} else {
 				e.Key = KeyBackspace
+			} else {
+				e.Key = KeyBackspace2
 			}
 		case vk_tab:
 			e.Key = KeyTab
