@@ -1,4 +1,4 @@
-module github.com/refaktor/keyboard
+module github.com/Noojuno/keyboard
 
 go 1.18
 
