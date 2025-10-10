@@ -1,4 +1,4 @@
-module github.com/Noojuno/keyboard
+module github.com/noojuno/keyboard
 
 go 1.18
 
