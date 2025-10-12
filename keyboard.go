@@ -11,7 +11,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	//"fmt"
 	"golang.org/x/sys/unix"
 )
 
@@ -52,7 +51,24 @@ func parse_escape_sequence(buf []byte) (size int, event KeyEvent) {
 
 	// Might be an Alt combo in format of ESC+letter
 	if buf[0] == '\033' {
-		event.Key = KeyEsc
+		if len(buf) < 3 {
+			event.Key = KeyEsc
+			event.Rune, size = utf8.DecodeRune(buf[1:])
+			size = len(buf)
+			return
+		}
+		switch buf[2] {
+		case 65:
+			event.Key = KeyArrowUp
+		case 66:
+			event.Key = KeyArrowDown
+		case 67:
+			event.Key = KeyArrowRight
+		case 68:
+			event.Key = KeyArrowLeft
+		default:
+			event.Key = KeyEsc
+		}
 		event.Rune, size = utf8.DecodeRune(buf[1:])
 		size = len(buf)
 		return
