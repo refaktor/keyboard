@@ -5,6 +5,7 @@ package keyboard
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
@@ -37,10 +38,23 @@ var (
 	quitConsole = make(chan bool)
 	inbuf       = make([]byte, 0, 128)
 	input_buf   = make(chan input_event)
+	
+	// Debug mode for escape sequence debugging
+	debugMode = os.Getenv("KEYBOARD_DEBUG") == "1"
 )
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
 
 func parse_escape_sequence(buf []byte) (size int, event KeyEvent) {
 	bufstr := string(buf)
+	
+	// First, try to match with pre-defined key sequences
 	for i, key := range keys {
 		if strings.HasPrefix(bufstr, key) {
 			event.Rune = 0
@@ -50,11 +64,116 @@ func parse_escape_sequence(buf []byte) (size int, event KeyEvent) {
 		}
 	}
 
+	// Enhanced parsing for modern terminal escape sequences
+	if len(buf) >= 3 && buf[0] == '\033' && buf[1] == '[' {
+		// Handle standard VT100/VT102 sequences ESC[...
+		switch {
+		case strings.HasPrefix(bufstr, "\x1b[A"):
+			// Up arrow
+			event.Key = KeyArrowUp
+			size = 3
+			return
+		case strings.HasPrefix(bufstr, "\x1b[B"):
+			// Down arrow  
+			event.Key = KeyArrowDown
+			size = 3
+			return
+		case strings.HasPrefix(bufstr, "\x1b[C"):
+			// Right arrow
+			event.Key = KeyArrowRight
+			size = 3
+			return
+		case strings.HasPrefix(bufstr, "\x1b[D"):
+			// Left arrow
+			event.Key = KeyArrowLeft
+			size = 3
+			return
+		case strings.HasPrefix(bufstr, "\x1b[H"):
+			// Home key
+			event.Key = KeyHome
+			size = 3
+			return
+		case strings.HasPrefix(bufstr, "\x1b[F"):
+			// End key
+			event.Key = KeyEnd
+			size = 3
+			return
+		}
+		
+		// Handle modified arrow keys (e.g., Shift+Arrow, Ctrl+Arrow, etc.)
+		// These follow the pattern ESC[1;modifierX where X is the arrow direction
+		if len(buf) >= 6 && strings.HasPrefix(bufstr, "\x1b[1;") {
+			// Extract modifier and key
+			if buf[5] >= '1' && buf[5] <= '9' && len(buf) >= 7 {
+				switch buf[6] {
+				case 'A':
+					event.Key = KeyArrowUp
+					size = 7
+					return
+				case 'B':
+					event.Key = KeyArrowDown
+					size = 7
+					return
+				case 'C':
+					event.Key = KeyArrowRight
+					size = 7
+					return
+				case 'D':
+					event.Key = KeyArrowLeft
+					size = 7
+					return
+				case 'H':
+					event.Key = KeyHome
+					size = 7
+					return
+				case 'F':
+					event.Key = KeyEnd
+					size = 7
+					return
+				}
+			}
+		}
+	}
+	
+	// Handle application cursor mode sequences ESC O...
+	if len(buf) >= 3 && buf[0] == '\033' && buf[1] == 'O' {
+		switch buf[2] {
+		case 'A':
+			event.Key = KeyArrowUp
+			size = 3
+			return
+		case 'B':
+			event.Key = KeyArrowDown
+			size = 3
+			return
+		case 'C':
+			event.Key = KeyArrowRight
+			size = 3
+			return
+		case 'D':
+			event.Key = KeyArrowLeft
+			size = 3
+			return
+		case 'H':
+			event.Key = KeyHome
+			size = 3
+			return
+		case 'F':
+			event.Key = KeyEnd
+			size = 3
+			return
+		}
+	}
+
 	// Might be an Alt combo in format of ESC+letter
-	if buf[0] == '\033' {
+	if buf[0] == '\033' && len(buf) > 1 {
 		event.Key = KeyEsc
 		event.Rune, size = utf8.DecodeRune(buf[1:])
-		size = len(buf)
+		if size > 0 {
+			size += 1 // account for the escape character
+		} else {
+			size = len(buf)
+		}
 		return
 	}
 	return 0, event
@@ -75,7 +194,11 @@ func extract_event(inbuf []byte) (int, KeyEvent) {
 		if size, event := parse_escape_sequence(inbuf); size != 0 {
 			return size, event
 		} else {
-			// it's not a recognized escape sequence, return error
+			// it's not a recognized escape sequence
+			if debugMode {
+				fmt.Fprintf(os.Stderr, "DEBUG: Unrecognized escape sequence: %q (bytes: %v)\n", 
+					string(inbuf[:min(len(inbuf), 10)]), inbuf[:min(len(inbuf), 10)])
+			}
 			i := 1 // check for multiple sequences in the buffer
 			for ; i < len(inbuf) && inbuf[i] != '\033'; i++ {
 			}

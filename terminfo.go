@@ -43,6 +43,13 @@ var (
 	linux_keys = []string{
 		"\x1b[[A", "\x1b[[B", "\x1b[[C", "\x1b[[D", "\x1b[[E", "\x1b[17~", "\x1b[18~", "\x1b[19~", "\x1b[20~", "\x1b[21~", "\x1b[23~", "\x1b[24~", "\x1b[2~", "\x1b[3~", "\x1b[1~", "\x1b[4~", "\x1b[5~", "\x1b[6~", "\x1b[A", "\x1b[B", "\x1b[D", "\x1b[C",
 	}
+	// Modern terminal key mappings for Kitty and Ghostty
+	kitty_keys = []string{
+		"\x1bOP", "\x1bOQ", "\x1bOR", "\x1bOS", "\x1b[15~", "\x1b[17~", "\x1b[18~", "\x1b[19~", "\x1b[20~", "\x1b[21~", "\x1b[23~", "\x1b[24~", "\x1b[2~", "\x1b[3~", "\x1b[H", "\x1b[F", "\x1b[5~", "\x1b[6~", "\x1b[A", "\x1b[B", "\x1b[D", "\x1b[C",
+	}
+	ghostty_keys = []string{
+		"\x1bOP", "\x1bOQ", "\x1bOR", "\x1bOS", "\x1b[15~", "\x1b[17~", "\x1b[18~", "\x1b[19~", "\x1b[20~", "\x1b[21~", "\x1b[23~", "\x1b[24~", "\x1b[2~", "\x1b[3~", "\x1b[H", "\x1b[F", "\x1b[5~", "\x1b[6~", "\x1b[A", "\x1b[B", "\x1b[D", "\x1b[C",
+	}
 
 	terms = []struct {
 		name string
@@ -57,6 +64,9 @@ var (
 		{"rxvt-unicode", rxvt_keys},
 		{"rxvt-256color", rxvt_keys},
 		{"linux", linux_keys},
+		{"xterm-kitty", kitty_keys},
+		{"kitty", kitty_keys},
+		{"ghostty", ghostty_keys},
 	}
 )
 
@@ -141,6 +151,7 @@ func setup_term_builtin() error {
 		return errors.New("terminfo: TERM environment variable not set")
 	}
 
+	// Direct terminal name matching
 	for _, t := range terms {
 		if t.name == name {
 			keys = t.keys
@@ -163,6 +174,12 @@ func setup_term_builtin() error {
 		// let's assume that 'cygwin' is xterm compatible
 		{"cygwin", xterm_keys},
 		{"st", xterm_keys},
+		// Modern terminals
+		{"kitty", kitty_keys},
+		{"xterm-kitty", kitty_keys},
+		{"ghostty", ghostty_keys},
+		{"alacritty", xterm_keys},  // Alacritty is xterm-compatible
+		{"wezterm", xterm_keys},    // WezTerm is xterm-compatible
 	}
 
 	// try compatibility variants
@@ -171,6 +188,13 @@ func setup_term_builtin() error {
 			keys = it.keys
 			return nil
 		}
+	}
+
+	// If we can't find a match, default to xterm keys for modern terminals
+	// This is a safety fallback for newer terminal emulators
+	if strings.Contains(name, "256color") || strings.Contains(name, "color") {
+		keys = xterm_keys
+		return nil
 	}
 
 	return errors.New("termbox: unsupported terminal")
